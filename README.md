@@ -4,7 +4,7 @@
 >
 > *An unofficial Edge / Chrome extension for [lms.vnu.edu.vn](https://lms.vnu.edu.vn). The guide below is in Vietnamese because the tool is made for VNU students.*
 
-Trên LMS của ĐHQGHN, nhiều bài học chỉ được tính **"Đã hoàn thành"** khi bạn ở trong bài đủ một số phút tối thiểu, ví dụ *"Phải học tối thiểu 5 (phút)"*. Extension này làm thay việc canh giờ đó. Nó quét khóa học, tìm những bài còn thiếu thời gian, rồi lần lượt mở từng bài, treo đủ số phút còn thiếu và chuyển sang bài tiếp theo.
+Bạn là sinh viên VNU? Bạn đang đau khổ vì không có thời gian học hết các khóa/môn học phần chung trên LMS? Đây là giải pháp dành cho bạn, 1 công cụ giúp bạn treo máy và tự động chuyển tiếp bài học khi đã hoàn thành.
 
 ---
 
