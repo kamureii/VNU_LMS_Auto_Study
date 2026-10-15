@@ -36,6 +36,7 @@ Trên LMS của ĐHQGHN, nhiều bài học chỉ được tính **"Đã hoàn t
 - **Tự bỏ qua bài không làm được:** quiz, Zoom, bài tập, bài chưa đến ngày mở được liệt kê riêng để bạn làm tay.
 - **Theo dõi tiến độ:** popup có đồng hồ đếm ngược, danh sách bài và nhật ký. Trên trang có nhãn trạng thái, và biểu tượng extension hiện số phút còn lại.
 - **Tự chạy tiếp:** nếu trang bị tải lại giữa chừng, tool tự tiếp tục.
+- **Kết hợp Extension:** Có khả năng kết hợp cùng Always active Window mà không bị conflict, extension vẫn hoạt động sau khi ẩn Tab.
 
 ## Yêu cầu
 
