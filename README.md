@@ -1,4 +1,4 @@
-# VNU LMS Auto Study
+# VNU-LMS Auto Study
 
 > Browser extension that auto-plays lessons on VNU LMS until each one meets its minimum study time, then moves to the next.
 >
