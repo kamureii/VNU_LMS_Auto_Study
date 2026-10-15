@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <strong>LMS Auto Study</strong>
+    <span id="status" class="chip">…</span>
+  </header>
+
+  <div id="msg" class="msg" hidden></div>
+
+  <div id="offpage" class="empty" hidden>
+    Mở trang lớp học trên <b>lms.vnu.edu.vn</b> (đường dẫn dạng <code>…/lop-hoc/chi-tiet/…</code>) rồi bấm lại vào biểu tượng extension.
+  </div>
+
+  <main id="main" hidden>
+    <section id="current" class="current" hidden>
+      <div class="label">Đang học</div>
+      <div id="curTitle" class="cur-title"></div>
+      <div id="curTime" class="big"></div>
+    </section>
+
+    <div class="actions">
+      <button id="btnScan">Quét</button>
+      <button id="btnStart" class="primary">Bắt đầu</button>
+      <button id="btnStop" class="danger">Dừng</button>
+    </div>
+
+    <div id="summary" class="summary"></div>
+
+    <label class="inline"><input type="checkbox" id="showAll"> Hiện cả bài đã xong / không yêu cầu</label>
+    <ul id="list" class="list"></ul>
+
+    <details>
+      <summary>Cài đặt</summary>
+      <div class="settings">
+        <label>Thời gian đệm mỗi bài (giây)
+          <input type="number" id="cfgBuffer" min="0" max="900" step="10">
+        </label>
+        <label>Số lần thử lại nếu chưa hoàn thành
+          <input type="number" id="cfgRetries" min="0" max="5" step="1">
+        </label>
+        <label class="inline"><input type="checkbox" id="cfgMute"> Tắt tiếng video</label>
+      </div>
+    </details>
+
+    <details>
+      <summary>Nhật ký</summary>
+      <pre id="log" class="log"></pre>
+    </details>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
