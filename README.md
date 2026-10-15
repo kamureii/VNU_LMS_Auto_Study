@@ -308,15 +308,6 @@ Mã nguồn ngắn và có chú thích, bạn có thể tự đọc để kiểm
 - Cần giữ tab LMS mở và máy không ngủ trong suốt thời gian chạy.
 - Chưa có trên Chrome Web Store / Edge Add-ons.
 
-## Lịch sử phiên bản
-
-| Phiên bản | Thay đổi |
-|---|---|
-| **0.1.3** | Nhận biết bài đã mở qua request của app, chạy được với bài đọc / PDF / hoạt động |
-| 0.1.2 | Xác nhận hoàn thành chắc hơn (hỏi lại server nhiều lần), sửa lỗi báo "Lỗi" nhầm khi bài đã xong |
-| 0.1.1 | Sửa lỗi video mở ở gần cuối làm tool dừng; một bài lỗi không còn làm dừng cả hàng đợi |
-| 0.1.0 | Bản đầu tiên |
-
 ## Lưu ý
 
 - Đây là dự án **không chính thức**, không liên quan tới Đại học Quốc gia Hà Nội hay đơn vị vận hành LMS.
