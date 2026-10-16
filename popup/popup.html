@@ -2,58 +2,85 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <header>
-    <strong>LMS Auto Study</strong>
-    <span id="status" class="chip">…</span>
+  <header class="bar">
+    <div class="brand">
+      <img src="../icons/icon48.png" alt="" width="20" height="20">
+      <span>LMS Auto Study</span>
+    </div>
+    <span id="status" class="state" data-st="idle">…</span>
   </header>
 
-  <div id="msg" class="msg" hidden></div>
+  <div id="msg" class="alert" role="alert" hidden></div>
 
-  <div id="offpage" class="empty" hidden>
-    Mở trang lớp học trên <b>lms.vnu.edu.vn</b> (đường dẫn dạng <code>…/lop-hoc/chi-tiet/…</code>) rồi bấm lại vào biểu tượng extension.
-  </div>
+  <section id="offpage" class="offpage" hidden>
+    <h1>Mở một lớp học để bắt đầu</h1>
+    <p>Vào trang chi tiết lớp trên lms.vnu.edu.vn (đường dẫn có dạng <b>…/lop-hoc/chi-tiet/…</b>), rồi bấm lại vào biểu tượng extension.</p>
+    <button id="btnOpenLms" class="btn primary">Mở trang LMS</button>
+  </section>
 
   <main id="main" hidden>
-    <section id="current" class="current" hidden>
-      <div class="label">Đang học</div>
-      <div id="curTitle" class="cur-title"></div>
-      <div id="curTime" class="big"></div>
+    <section id="hero" class="hero" data-mode="idle" aria-live="polite">
+      <div id="heroTop" class="hero-top"></div>
+      <div id="heroBig" class="hero-big"></div>
+      <div id="heroSub" class="hero-sub"></div>
+      <div id="lessonBar" class="meter lesson" hidden><span></span></div>
+    </section>
+
+    <section id="overview" class="overview" hidden>
+      <div id="courseBar" class="meter course" role="img"></div>
+      <ul id="legend" class="legend"></ul>
     </section>
 
     <div class="actions">
-      <button id="btnScan">Quét</button>
-      <button id="btnStart" class="primary">Bắt đầu</button>
-      <button id="btnStop" class="danger">Dừng</button>
+      <button id="btnStart" class="btn primary">Bắt đầu học</button>
+      <button id="btnStop" class="btn stop" hidden>Dừng</button>
+      <button id="btnScan" class="btn quiet">Quét lại</button>
     </div>
 
-    <div id="summary" class="summary"></div>
+    <nav class="tabs" role="tablist" aria-label="Nội dung">
+      <button role="tab" id="tab-lessons" aria-controls="panel-lessons" aria-selected="true">Bài học <span id="tabCount" class="count"></span></button>
+      <button role="tab" id="tab-log" aria-controls="panel-log" aria-selected="false">Nhật ký</button>
+      <button role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false">Cài đặt</button>
+    </nav>
 
-    <label class="inline"><input type="checkbox" id="showAll"> Hiện cả bài đã xong / không yêu cầu</label>
-    <ul id="list" class="list"></ul>
-
-    <details>
-      <summary>Cài đặt</summary>
-      <div class="settings">
-        <label>Đệm ngẫu nhiên mỗi bài: từ (giây)
-          <input type="number" id="cfgBufMin" min="0" max="900" step="1">
-        </label>
-        <label>đến (giây)
-          <input type="number" id="cfgBufMax" min="0" max="900" step="1">
-        </label>
-        <label>Số lần thử lại nếu chưa hoàn thành
-          <input type="number" id="cfgRetries" min="0" max="5" step="1">
-        </label>
-        <label class="inline"><input type="checkbox" id="cfgMute"> Tắt tiếng video</label>
+    <section id="panel-lessons" role="tabpanel" aria-labelledby="tab-lessons" class="panel">
+      <div class="filter" role="radiogroup" aria-label="Lọc bài">
+        <label><input type="radio" name="filter" value="todo" checked><span>Cần xử lý</span></label>
+        <label><input type="radio" name="filter" value="all"><span>Tất cả</span></label>
       </div>
-    </details>
+      <ul id="list" class="list"></ul>
+      <p id="listEmpty" class="empty" hidden></p>
+    </section>
 
-    <details>
-      <summary>Nhật ký</summary>
-      <pre id="log" class="log"></pre>
-    </details>
+    <section id="panel-log" role="tabpanel" aria-labelledby="tab-log" class="panel" hidden>
+      <ol id="log" class="log"></ol>
+      <p id="logEmpty" class="empty" hidden>Chưa có hoạt động nào.</p>
+    </section>
+
+    <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" class="panel" hidden>
+      <div class="field">
+        <span class="field-label" id="bufLabel">Thời gian treo thêm mỗi bài</span>
+        <div class="range" role="group" aria-labelledby="bufLabel">
+          <label class="numfield"><span>từ</span><input type="number" id="cfgBufMin" min="0" max="900" step="1"><span>giây</span></label>
+          <label class="numfield"><span>đến</span><input type="number" id="cfgBufMax" min="0" max="900" step="1"><span>giây</span></label>
+        </div>
+        <p class="hint">Mỗi bài được cộng một số giây ngẫu nhiên trong khoảng này, ngoài số phút còn thiếu.</p>
+      </div>
+      <div class="field inline">
+        <label class="field-label" for="cfgRetries">Số lần thử lại nếu chưa hoàn thành</label>
+        <label class="numfield"><input type="number" id="cfgRetries" min="0" max="5" step="1"><span>lần</span></label>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="cfgMute" role="switch">
+        <span class="track" aria-hidden="true"></span>
+        <span>Tắt tiếng video</span>
+      </label>
+      <p id="savedNote" class="hint saved" aria-live="polite"></p>
+    </section>
   </main>
 
   <script src="popup.js"></script>

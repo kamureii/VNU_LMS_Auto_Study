@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
       text = '!';
     }
     chrome.action.setBadgeText({ tabId: sender.tab.id, text });
-    chrome.action.setBadgeBackgroundColor({ tabId: sender.tab.id, color: msg.status === 'error' ? '#b71c1c' : '#1b5e20' });
+    chrome.action.setBadgeBackgroundColor({ tabId: sender.tab.id, color: msg.status === 'error' ? '#b3261e' : '#0b6b3d' });
   }
   if (msg?.evt === 'notify') {
     chrome.notifications.create({

@@ -107,17 +107,13 @@ https://lms.vnu.edu.vn/learn/lop-hoc/chi-tiet/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx
 
 ### 2. Quét khóa học
 
-Bấm biểu tượng extension, rồi bấm **Quét**. Sau vài giây, danh sách bài hiện ra, phía trên có dòng tổng kết, ví dụ:
-
-```
-9 bài cần học (~14:00) · 18 xong · 12 làm tay · 110 chưa mở
-```
+Bấm biểu tượng extension, rồi bấm **Chỉ quét** (bỏ qua bước này cũng được, vì **Bắt đầu học** tự quét trước). Sau vài giây, khung trên cùng hiện số bài cần học và thời gian ước tính, bên dưới là thanh tiến độ khóa học và danh sách bài theo từng chương.
 
 👉 **Lần đầu dùng**, nên mở tab **Tiến trình học tập** trên LMS và so với danh sách này để chắc tool đọc đúng.
 
 ### 3. Bắt đầu
 
-Bấm **Bắt đầu**. Từ lúc này tool sẽ:
+Bấm **Bắt đầu học**. Từ lúc này tool sẽ:
 
 1. Mở bài đầu tiên trong hàng đợi.
 2. Treo đủ thời gian còn thiếu, cộng thêm một khoảng đệm nhỏ.
@@ -128,7 +124,7 @@ Khi xong, trình duyệt hiện thông báo kèm tổng kết.
 
 ### 4. Dừng
 
-Bấm **Dừng** trong popup hoặc trên nhãn xanh ở góc dưới bên trái trang. Thời gian đã học tới lúc dừng vẫn được LMS ghi nhận. Lần sau bấm **Bắt đầu**, tool chỉ học phần còn thiếu.
+Bấm **Dừng** trong popup hoặc trên thẻ xanh ở góc dưới bên trái trang. Thời gian đã học tới lúc dừng vẫn được LMS ghi nhận. Lần sau bấm **Học tiếp**, tool chỉ học phần còn thiếu.
 
 ### 5. Làm phần còn lại bằng tay
 
@@ -149,15 +145,15 @@ Lựa chọn của bạn được nhớ cho lớp đó, kể cả khi bấm Qué
 
 | Thành phần | Ý nghĩa |
 |---|---|
-| Nhãn trạng thái (góc phải) | `Chưa quét` · `Sẵn sàng` · `Đang chạy` · `Đã dừng` · `Hoàn tất` · `Lỗi` |
-| Khung **Đang học** | Tên bài hiện tại và thời gian còn lại |
-| **Quét** | Lấy lại danh sách bài và thời gian mới nhất |
-| **Bắt đầu** | Quét rồi chạy hàng đợi |
+| Trạng thái (góc phải) | `Chưa quét` · `Sẵn sàng` · `Đang chạy` · `Đã dừng` · `Hoàn tất` · `Lỗi` |
+| Khung trên cùng | Khi đang chạy: nền xanh đậm, tên bài, đồng hồ đếm ngược và thanh tiến độ của bài. Khi chưa chạy: số bài cần học và thời gian ước tính. Khi lỗi: lý do dừng |
+| Thanh tiến độ khóa học | Mỗi màu là một nhóm bài (xong, đang học, chờ học, làm tay, lỗi, chưa mở), kèm số lượng bên dưới |
+| **Bắt đầu học** / **Học tiếp** | Quét rồi chạy hàng đợi |
 | **Dừng** | Dừng sau thao tác hiện tại |
-| Dòng tổng kết | Số bài cần học (và tổng thời gian ước tính), đã xong, làm tay, chưa mở, lỗi |
-| *Hiện cả bài đã xong* | Mặc định danh sách ẩn bài đã xong. Tích vào để xem tất cả |
-| **Cài đặt** | Xem [bảng bên dưới](#cài-đặt-trong-popup) |
-| **Nhật ký** | 40 dòng log gần nhất, dùng để gỡ lỗi |
+| **Chỉ quét** / **Quét lại** | Lấy lại danh sách bài và thời gian mới nhất, không chạy |
+| Tab **Bài học** | Danh sách bài theo chương. *Cần xử lý* ẩn bài đã xong, *Tất cả* hiện mọi bài |
+| Tab **Nhật ký** | 60 dòng log gần nhất, dùng để gỡ lỗi |
+| Tab **Cài đặt** | Xem [bảng bên dưới](#cài-đặt-trong-popup). Thay đổi được lưu ngay |
 
 ### Trạng thái từng bài
 
@@ -172,7 +168,7 @@ Lựa chọn của bạn được nhớ cho lớp đó, kể cả khi bấm Qué
 
 ### Nhãn trên trang và biểu tượng
 
-- **Nhãn xanh ở góc dưới bên trái trang:** `Auto Study • <tên bài> • còn 03:25`, kèm nút **Dừng**. Nhãn chuyển sang màu đỏ khi có lỗi.
+- **Thẻ xanh ở góc dưới bên trái trang:** tên bài, đồng hồ đếm ngược, thanh tiến độ và nút **Dừng**. Thẻ chuyển sang màu đỏ và hiện lý do khi có lỗi.
 - **Số trên biểu tượng extension:** số phút còn lại của bài hiện tại. Dấu `!` nghĩa là có lỗi.
 
 ### Cài đặt trong popup

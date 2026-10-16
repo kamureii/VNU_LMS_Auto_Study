@@ -368,6 +368,7 @@
   async function studyFor(item, sec) {
     const endsAt = Date.now() + sec * 1000;
     state.currentId = item.id;
+    state.startedAt = Date.now();
     state.endsAt = endsAt;
     await save();
     studying = true;
@@ -572,45 +573,111 @@
     }
   }
 
-  /* ---------------- nhãn trạng thái nổi trên trang ---------------- */
+  /* ---------------- thẻ trạng thái nổi trên trang ----------------
+   * Dựng trong shadow DOM để CSS của LMS không ảnh hưởng và ngược lại. */
+  const PILL_CSS = `
+    :host { all: initial; }
+    .card {
+      position: fixed; left: 16px; bottom: 16px; z-index: 2147483647; box-sizing: border-box;
+      width: 320px; padding: 12px 14px 14px; border-radius: 8px;
+      font: 13px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: #effaf3; background: #0e3b26; box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+      animation: in .28s cubic-bezier(.2, .7, .2, 1);
+    }
+    .card.error { background: #7d1c16; }
+    .top { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #a9c7b6; }
+    .error .top { color: #f6c9c4; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #7be0a8; animation: pulse 1.6s ease-in-out infinite; }
+    .error .dot { background: #ffb4ab; animation: none; }
+    .title { margin-top: 6px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .error .title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px; }
+    .time { font-size: 26px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+    .time.small { font-size: 14px; font-weight: 600; letter-spacing: 0; color: #a9c7b6; }
+    button {
+      flex: none; height: 32px; padding: 0 14px; border: 0; border-radius: 6px; cursor: pointer;
+      font: inherit; font-weight: 600; color: #0e3b26; background: #effaf3;
+      transition: transform .12s, opacity .15s;
+    }
+    .error button { color: #7d1c16; }
+    button:hover { opacity: .9; }
+    button:disabled { opacity: .6; cursor: default; }
+    button:active { transform: scale(.96); }
+    button:focus-visible { outline: 2px solid #7be0a8; outline-offset: 2px; }
+    .bar { height: 4px; margin-top: 10px; border-radius: 2px; overflow: hidden; background: #24563d; }
+    .bar span { display: block; height: 100%; width: 0; background: #7be0a8; transition: width .8s linear; }
+    @keyframes in { from { opacity: 0; transform: translateY(12px); } }
+    @keyframes pulse { 50% { opacity: .35; } }
+    @media (prefers-reduced-motion: reduce) { .card, .dot, .bar span { animation: none; transition: none; } }
+  `;
   let pill = null;
+  let pillUi = null;
   function renderPill() {
     const show = (running || state.status === 'error') && !!getClassId();
     if (!show) { if (pill) pill.style.display = 'none'; return; }
     if (!pill) {
       pill = document.createElement('div');
       pill.id = 'lms-auto-pill';
-      Object.assign(pill.style, {
-        position: 'fixed', left: '12px', bottom: '12px', zIndex: '2147483647', display: 'flex',
-        alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '10px',
-        font: '13px/1.35 system-ui, -apple-system, Segoe UI, sans-serif', color: '#fff',
-        boxShadow: '0 4px 16px rgba(0,0,0,.25)', maxWidth: '440px',
-      });
-      const text = document.createElement('span');
-      text.className = 'lms-auto-text';
-      const btn = document.createElement('button');
-      Object.assign(btn.style, {
-        border: '0', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer',
-        font: 'inherit', background: '#fff', color: '#222', flex: 'none',
-      });
-      btn.addEventListener('click', () => {
+      const root = pill.attachShadow({ mode: 'open' });
+      const style = document.createElement('style');
+      style.textContent = PILL_CSS;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('role', 'status');
+      card.innerHTML = '<div class="top"><span class="dot"></span><span class="label"></span></div>'
+        + '<div class="title"></div><div class="row"><span class="time"></span><button type="button"></button></div>'
+        + '<div class="bar"><span></span></div>';
+      card.querySelector('button').addEventListener('click', () => {
         if (running) stopRequested = true;
         else { state.status = 'stopped'; save(); }
       });
-      pill.append(text, btn);
+      root.append(style, card);
       document.body.appendChild(pill);
+      pillUi = {
+        card, label: card.querySelector('.label'), title: card.querySelector('.title'),
+        time: card.querySelector('.time'), btn: card.querySelector('button'),
+        bar: card.querySelector('.bar'), fill: card.querySelector('.bar span'),
+      };
     }
-    pill.style.display = 'flex';
-    pill.style.background = state.status === 'error' ? '#b71c1c' : '#1b5e20';
+    pill.style.display = '';
+    const ui = pillUi;
+    const isErr = state.status === 'error';
+    ui.card.classList.toggle('error', isErr);
     const cur = state.items.find((i) => i.id === state.currentId);
-    let t;
-    if (state.status === 'error') t = 'Auto Study lỗi: ' + (state.error || '');
-    else if (stopRequested) t = 'Auto Study: đang dừng…';
-    else if (cur && state.endsAt) t = `Auto Study • ${cur.title} • còn ${fmt((state.endsAt - Date.now()) / 1000)}`;
-    else if (cur) t = `Auto Study • đang mở / kiểm tra "${cur.title}"…`;
-    else t = 'Auto Study • đang chuẩn bị…';
-    pill.querySelector('.lms-auto-text').textContent = t;
-    pill.querySelector('button').textContent = running ? 'Dừng' : 'Đóng';
+    const c = counts();
+    const total = state.items.length;
+    let label, title, time = '', small = false, progress = null;
+    if (isErr) {
+      label = 'Auto Study đã dừng vì lỗi';
+      title = state.error || 'Mở popup để xem chi tiết';
+    } else if (stopRequested) {
+      label = 'Auto Study đang dừng…';
+      title = cur ? cur.title : '';
+      time = 'Đang lưu thời gian đã học'; small = true;
+    } else if (cur && state.endsAt) {
+      label = `Auto Study · đang học · ${c.done || 0}/${total} bài xong`;
+      title = cur.title;
+      time = fmt((state.endsAt - Date.now()) / 1000);
+      if (state.startedAt && state.endsAt > state.startedAt) {
+        progress = Math.min(1, Math.max(0, (Date.now() - state.startedAt) / (state.endsAt - state.startedAt)));
+      }
+    } else if (cur) {
+      label = `Auto Study · ${c.done || 0}/${total} bài xong`;
+      title = cur.title;
+      time = 'Đang mở bài hoặc chờ LMS…'; small = true;
+    } else {
+      label = 'Auto Study';
+      title = 'Đang chuẩn bị hàng đợi…';
+    }
+    ui.label.textContent = label;
+    ui.title.textContent = title;
+    ui.title.style.display = title ? '' : 'none';
+    ui.time.textContent = time;
+    ui.time.classList.toggle('small', small);
+    ui.bar.style.display = progress == null ? 'none' : '';
+    if (progress != null) ui.fill.style.width = (progress * 100).toFixed(1) + '%';
+    ui.btn.textContent = running ? (stopRequested ? 'Đang dừng' : 'Dừng') : 'Đóng';
+    ui.btn.disabled = running && stopRequested;
   }
   setInterval(renderPill, 1000);
 
