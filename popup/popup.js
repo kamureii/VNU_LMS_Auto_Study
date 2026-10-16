@@ -28,9 +28,9 @@ function showMsg(text) {
   m.textContent = text || '';
 }
 
-async function send(cmd) {
+async function send(cmd, extra = {}) {
   try {
-    return await chrome.tabs.sendMessage(tabId, { cmd });
+    return await chrome.tabs.sendMessage(tabId, { cmd, ...extra });
   } catch {
     return { ok: false, error: 'Chưa kết nối được với trang. Hãy tải lại trang LMS (F5) rồi mở lại popup.' };
   }
@@ -77,6 +77,10 @@ function render({ state, running, cfg }) {
   // Danh sách
   const showAll = $('#showAll').checked;
   const list = $('#list');
+  // Chỉ vẽ lại danh sách khi có thay đổi, để không làm mất cú click vào nút
+  const sig = JSON.stringify([showAll, running, state.items.map((i) => [i.id, i.status, i.learnedMin, i.note])]);
+  if (list.dataset.sig === sig) { $('#log').textContent = (state.log || []).slice(-40).join('\n'); if (state.status === 'error' && state.error) showMsg(state.error); return; }
+  list.dataset.sig = sig;
   list.replaceChildren();
   for (const i of state.items) {
     if (!showAll && !LIST_DEFAULT.has(i.status)) continue;
@@ -90,6 +94,12 @@ function render({ state, running, cfg }) {
     if (i.note) sub.push(i.note);
     if (sub.length) t.append(el('div', 'sub', sub.join(' · ')));
     li.append(t);
+    if (i.status === 'manual' || i.status === 'failed' || i.status === 'pending') {
+      const b = el('button', 'mini', i.status === 'pending' ? 'Bỏ qua' : 'Học bài này');
+      b.title = i.status === 'pending' ? 'Không cho tool học bài này' : 'Cho tool treo bài này như bài thường';
+      b.dataset.id = i.id;
+      li.append(b);
+    }
     list.append(li);
   }
 
@@ -155,6 +165,14 @@ async function init() {
     setTimeout(refresh, 300);
   });
   $('#showAll').addEventListener('change', refresh);
+  $('#list').addEventListener('click', async (ev) => {
+    const b = ev.target.closest('button.mini');
+    if (!b) return;
+    b.disabled = true;
+    const r = await send('toggle', { id: b.dataset.id });
+    if (!r?.ok) showMsg(r?.error);
+    refresh();
+  });
   for (const id of ['#cfgBuffer', '#cfgRetries', '#cfgMute']) $(id).addEventListener('change', saveCfg);
 
   refresh();

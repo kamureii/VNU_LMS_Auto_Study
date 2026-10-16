@@ -16,8 +16,12 @@
   const CFG_KEY = 'lmsAutoCfg';
   const DEFAULT_CFG = { bufferSec: 60, mute: true, maxRetries: 2, settleSec: 5, confirmSec: 60 };
   const ZERO = '00000000-0000-0000-0000-000000000000';
-  const INTERACTIVE_TYPE_RE = /trắc nghiệm|kiểm tra|bài tập|bài thi|khảo sát|zoom|trực tuyến|thảo luận|nộp bài|survey|quiz|exercise|assignment/i;
-  const INTERACTIVE_TITLE_RE = /zoom|trắc nghiệm|kiểm tra|khảo sát/i;
+  // Loại bài "chỉ cần xem" (video, văn bản, tài liệu...): không bao giờ bị coi là bài tương tác chỉ vì tên
+  const PASSIVE_TYPE_RE = /video|âm thanh|audio|văn bản|tài liệu|pdf|bài giảng|slide|trình chiếu|hình ảnh|liên kết|đường dẫn|link|html|scorm/i;
+  const INTERACTIVE_TYPE_RE = /trắc nghiệm|kiểm tra|bài tập|bài thi|khảo sát|zoom|lớp học trực tuyến|họp trực tuyến|thảo luận|nộp bài|điểm danh|survey|quiz|exercise|assignment/i;
+  // Chỉ dùng khi không biết loại bài: tên phải BẮT ĐẦU bằng từ khóa (bỏ qua số thứ tự "1.6 ").
+  // Tránh nhầm các tiêu đề như "Video: … về trọng số kiểm tra, đánh giá".
+  const INTERACTIVE_TITLE_RE = /^(?:[\d.]+\s*)?(?:bài\s+|phiếu\s+)?(?:trắc nghiệm|kiểm tra|khảo sát|thi\b)|\bzoom\b|buổi học trực tiếp/i;
   const RESUME_WINDOW_MS = 10 * 60 * 1000;
 
   let cfg = { ...DEFAULT_CFG };
@@ -27,7 +31,7 @@
   let stopRequested = false;
 
   function blankState() {
-    return { classId: null, status: 'idle', items: [], currentId: null, endsAt: null, error: null, log: [], scannedAt: null, updatedAt: Date.now() };
+    return { classId: null, status: 'idle', items: [], overrides: {}, currentId: null, endsAt: null, error: null, log: [], scannedAt: null, updatedAt: Date.now() };
   }
 
   /* ---------------- tiện ích ---------------- */
@@ -143,11 +147,25 @@
     return out;
   }
 
-  function isInteractive(n) {
-    if (n.contentQuizId || n.contentSurveyId || n.exerciseId || n.zoomConfigId || n.classOnlineId || n.testFormName) return true;
-    if (n.contentExerciseType != null) return true;
-    if (INTERACTIVE_TYPE_RE.test(n.type?.title || '')) return true;
-    return INTERACTIVE_TITLE_RE.test(n.title || '');
+  const hasId = (v) => typeof v === 'string' ? v.trim() !== '' && v !== ZERO : v != null && v !== 0;
+
+  // Trả về lý do nếu là bài tương tác (cần làm tay), ngược lại trả về null
+  function interactiveReason(n) {
+    // 1) Dấu hiệu chắc chắn từ dữ liệu LMS
+    if (hasId(n.contentQuizId)) return 'Bài trắc nghiệm';
+    if (hasId(n.contentSurveyId)) return 'Phiếu khảo sát';
+    if (hasId(n.exerciseId) || n.contentExerciseType != null) return 'Bài tập / nộp bài';
+    if (hasId(n.zoomConfigId) || hasId(n.classOnlineId)) return 'Buổi học trực tuyến (Zoom)';
+    if (hasId(n.testFormName)) return 'Bài thi';
+    // 2) Theo loại bài
+    const type = n.type?.title || '';
+    if (type) {
+      if (PASSIVE_TYPE_RE.test(type)) return null;
+      if (INTERACTIVE_TYPE_RE.test(type)) return `Loại bài "${type.replace(/\s*\(.*$/, '')}"`;
+      return null;
+    }
+    // 3) Không biết loại bài: đoán theo tên
+    return INTERACTIVE_TITLE_RE.test(norm(n.title)) ? 'Đoán theo tên bài' : null;
   }
 
   async function scan() {
@@ -155,6 +173,7 @@
     if (!classId) throw new Error('Hãy mở trang chi tiết lớp học (…/lop-hoc/chi-tiet/…) trước');
     if (state.classId !== classId) state = blankState();
     state.classId = classId;
+    state.overrides = state.overrides || {};
     log('Đang quét danh sách bài học…');
 
     const [contents, join] = await Promise.all([
@@ -177,14 +196,21 @@
           learnedMin: +(Number(l?.learnTime) || 0).toFixed(2),
           status: 'pending',
           note: '',
+          autoStatus: 'pending',
         };
+        const why = interactiveReason(n);
         if (l?.isFinish) item.status = 'done';
-        else if (isInteractive(n)) { item.status = 'manual'; item.note = 'Bài tương tác (quiz/zoom/bài tập), cần làm tay'; }
+        else if (why) { item.status = 'manual'; item.note = why + ', cần làm tay'; }
         else if (n.resultType != null && n.resultType !== 1) { item.status = 'manual'; item.note = 'Điều kiện hoàn thành không phải thời gian'; }
         else if (n.startDate && Date.parse(n.startDate) > now) {
           item.status = 'locked';
           item.note = 'Mở từ ' + new Date(n.startDate).toLocaleDateString('vi-VN');
         }
+        item.autoStatus = item.status;
+        // Người dùng tự chọn học / bỏ qua bài này
+        const ov = state.overrides?.[n.id];
+        if (ov === 'pending' && (item.status === 'manual' || item.status === 'failed')) { item.status = 'pending'; item.note = 'Bạn đã chọn cho tool học bài này'; }
+        else if (ov === 'manual' && item.status === 'pending') { item.status = 'manual'; item.note = 'Bạn đã chọn bỏ qua bài này'; }
         return item;
       });
 
@@ -450,10 +476,16 @@
       }
       if (item.learnedMin <= before + 0.05) {
         item.status = 'failed';
-        item.note = 'LMS không cộng thời gian';
+        item.note = 'LMS không cộng thời gian cho bài này';
+        noAccrualStreak++;
         await save();
-        throw new FatalError(`LMS không ghi nhận thời gian cho "${item.title}". Đã dừng để bạn kiểm tra.`);
+        if (noAccrualStreak >= 2) {
+          throw new FatalError(`LMS không ghi nhận thời gian cho 2 bài liên tiếp (gần nhất: "${item.title}"). Đã dừng để bạn kiểm tra.`);
+        }
+        log(`✗ LMS không cộng thời gian cho "${item.title}", bỏ qua bài này`);
+        return;
       }
+      noAccrualStreak = 0;
       log(`"${item.title}" mới có ${item.learnedMin}/${item.requiredMin} phút, học thêm`);
       await save();
     }
@@ -470,10 +502,13 @@
     return `Xong ${c.done || 0} bài. Lỗi ${c.failed || 0}, cần làm tay ${c.manual || 0}, chưa mở ${c.locked || 0}.`;
   }
 
+  let noAccrualStreak = 0;
+
   async function start() {
     if (running) return;
     running = true;
     stopRequested = false;
+    noAccrualStreak = 0;
     try {
       await scan();
       state.status = 'running';
@@ -481,7 +516,10 @@
       log(`Bắt đầu: ${queue.length} bài trong hàng đợi`);
       await save();
 
-      for (const item of queue) {
+      const queued = new Set();
+      for (let item; (item = queue.shift() || state.items.find((i) => i.status === 'pending' && !queued.has(i.id)));) {
+        queued.add(item.id);
+        if (item.status !== 'pending') continue; // người dùng đã bỏ qua bài này trong lúc chờ
         checkStop();
         try {
           await processItem(item);
@@ -586,6 +624,28 @@
         case 'stop':
           stopRequested = true;
           return { ok: true };
+        case 'toggle': {
+          // Đổi một bài giữa "Chờ học" và "Bỏ qua (làm tay)"
+          const it = state.items.find((i) => i.id === msg.id);
+          if (!it) return { ok: false, error: 'Không tìm thấy bài' };
+          if (it.status === 'running') return { ok: false, error: 'Bài này đang được học' };
+          state.overrides = state.overrides || {};
+          if (it.status === 'pending') {
+            it.status = 'manual';
+            it.note = 'Bạn đã chọn bỏ qua bài này';
+            state.overrides[it.id] = 'manual';
+          } else if (it.status === 'manual' || it.status === 'failed') {
+            it.status = 'pending';
+            it.note = 'Bạn đã chọn cho tool học bài này';
+            state.overrides[it.id] = 'pending';
+          } else {
+            return { ok: false, error: 'Không đổi được trạng thái của bài này' };
+          }
+          if (state.overrides[it.id] === it.autoStatus) delete state.overrides[it.id];
+          log(`Đổi "${it.title}" → ${it.status === 'pending' ? 'Chờ học' : 'Làm tay'}`);
+          await save();
+          return { ok: true };
+        }
         default:
           return { ok: false, error: 'Lệnh không hợp lệ' };
       }

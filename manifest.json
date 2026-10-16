@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VNU LMS Auto Study",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Tự mở từng bài, treo đủ thời gian yêu cầu và chuyển bài tiếp theo trên lms.vnu.edu.vn",
   "permissions": ["storage", "notifications"],
   "host_permissions": ["https://lms.vnu.edu.vn/*"],

@@ -134,6 +134,13 @@ Bấm **Dừng** trong popup hoặc trên nhãn xanh ở góc dưới bên trái
 
 Các bài có nhãn **Làm tay** (quiz, Zoom, bài tập) và **Chưa mở** (chưa đến ngày) tool không làm. Bạn tự làm những bài này.
 
+Tool đoán loại bài dựa trên dữ liệu LMS nên đôi khi có thể nhầm. Bạn tự chỉnh được ngay trong danh sách của popup:
+
+- Bài bị đánh **Làm tay** hoặc **Lỗi** nhưng thật ra chỉ cần xem (ví dụ video): bấm **Học bài này** để đưa vào hàng đợi.
+- Bài **Chờ học** mà bạn muốn tự làm: bấm **Bỏ qua**.
+
+Lựa chọn của bạn được nhớ cho lớp đó, kể cả khi bấm Quét lại. Bạn đổi được cả khi tool đang chạy.
+
 ---
 
 ## Giải thích giao diện

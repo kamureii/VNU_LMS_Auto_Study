@@ -93,3 +93,8 @@ summary { cursor: pointer; color: var(--muted); font-weight: 600; padding: 4px 0
   white-space: pre-wrap; font: 11.5px/1.4 ui-monospace, Consolas, monospace; color: var(--muted);
   max-height: 180px; overflow-y: auto; background: var(--soft); border-radius: 8px; padding: 8px; margin: 4px 0 0;
 }
+
+button.mini {
+  flex: none; align-self: center; padding: 3px 8px; font-size: 11.5px; font-weight: 600;
+  border-radius: 6px; white-space: nowrap;
+}
