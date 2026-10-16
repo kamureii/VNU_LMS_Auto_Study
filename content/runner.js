@@ -14,7 +14,7 @@
 
   const STATE_KEY = 'lmsAutoState';
   const CFG_KEY = 'lmsAutoCfg';
-  const DEFAULT_CFG = { bufferSec: 60, mute: true, maxRetries: 2, settleSec: 5, confirmSec: 60 };
+  const DEFAULT_CFG = { bufferMinSec: 10, bufferMaxSec: 50, mute: true, maxRetries: 2, settleSec: 5, confirmSec: 60 };
   const ZERO = '00000000-0000-0000-0000-000000000000';
   // Loại bài "chỉ cần xem" (video, văn bản, tài liệu...): không bao giờ bị coi là bài tương tác chỉ vì tên
   const PASSIVE_TYPE_RE = /video|âm thanh|audio|văn bản|tài liệu|pdf|bài giảng|slide|trình chiếu|hình ảnh|liên kết|đường dẫn|link|html|scorm/i;
@@ -50,6 +50,12 @@
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
     const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
     return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  };
+  // Thời gian đệm ngẫu nhiên (giây) trong khoảng [bufferMinSec, bufferMaxSec]
+  const randomBuffer = () => {
+    const lo = Math.max(0, Number(cfg.bufferMinSec) || 0);
+    const hi = Math.max(lo, Number(cfg.bufferMaxSec) || 0);
+    return lo + Math.floor(Math.random() * (hi - lo + 1));
   };
   const counts = () => state.items.reduce((a, i) => ((a[i.status] = (a[i.status] || 0) + 1), a), {});
 
@@ -438,8 +444,9 @@
       if (attempt > 0 && (await markIfDone(item))) return;
 
       const base = Math.max(0, (item.requiredMin - item.learnedMin) * 60);
-      const remainSec = base + Math.max(cfg.bufferSec, base * 0.1);
-      log(`Mở "${item.title}", treo ${fmt(remainSec)}${attempt ? ` (lần ${attempt + 1})` : ''}`);
+      const bufSec = randomBuffer();
+      const remainSec = base + bufSec;
+      log(`Mở "${item.title}", treo ${fmt(remainSec)} (đệm ${bufSec}s)${attempt ? ` (lần ${attempt + 1})` : ''}`);
 
       try {
         await openLesson(item);

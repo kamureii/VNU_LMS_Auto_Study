@@ -179,7 +179,7 @@ Lựa chọn của bạn được nhớ cho lớp đó, kể cả khi bấm Qué
 
 | Mục | Mặc định | Ý nghĩa |
 |---|---|---|
-| Thời gian đệm mỗi bài | 60 giây | Thời gian treo thêm ngoài số phút còn thiếu. Tool dùng số lớn hơn giữa giá trị này và 10% thời gian còn thiếu, để bù sai số làm tròn của LMS |
+| Đệm ngẫu nhiên mỗi bài (từ / đến) | 10 / 50 giây | Thời gian treo thêm ngoài số phút còn thiếu. Mỗi bài tool chọn ngẫu nhiên một số giây trong khoảng này. Nếu LMS chưa ghi nhận đủ, tool tự học thêm ở lần thử lại |
 | Số lần thử lại | 2 | Nếu bài chưa hoàn thành sau lần treo đầu, tool học thêm tối đa bấy nhiêu lần |
 | Tắt tiếng video | Bật | Video chạy không có tiếng |
 
@@ -295,7 +295,7 @@ lms-auto-study/
    - `LmsClass/FrUserJoinClassNew/{classId}`: thời gian đã học (`learnTime`) và cờ hoàn thành (`isFinish`) của từng bài.
 2. **Lập hàng đợi.** Hàng đợi gồm các bài chưa hoàn thành, có yêu cầu thời gian và đã mở. Bài tương tác và bài chưa mở được tách riêng.
 3. **Mở bài** bằng cách click thật trong danh sách bên trái, tự mở các chương đang thu gọn. Tool biết bài đã tải xong nhờ nghe request `LmsClassContent/FrGetById/{id}` mà app gửi khi mở bài.
-4. **Treo.** Thời gian treo bằng số phút còn thiếu cộng khoảng đệm, được đếm theo đồng hồ thật nên vẫn đúng khi tab chạy nền. Video được giữ chạy liên tục và không bao giờ chạm điểm kết thúc.
+4. **Treo.** Thời gian treo bằng số phút còn thiếu cộng khoảng đệm ngẫu nhiên (mặc định 10–50 giây), được đếm theo đồng hồ thật nên vẫn đúng khi tab chạy nền. Video được giữ chạy liên tục và không bao giờ chạm điểm kết thúc.
 5. **Chốt và xác nhận.** LMS tính giờ qua một kết nối SignalR giữ mở trong lúc bạn ở trong bài, và **lưu thời gian khi kết nối đó đóng**. Vì vậy hết giờ, tool chuyển sang tab *Tiến trình học tập*, rồi hỏi lại server mỗi 5 giây (tối đa 60 giây) cho tới khi bài được xác nhận hoàn thành.
 
 ## Quyền riêng tư và bảo mật

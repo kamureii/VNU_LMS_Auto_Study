@@ -1,5 +1,5 @@
 const CFG_KEY = 'lmsAutoCfg';
-const DEFAULT_CFG = { bufferSec: 60, mute: true, maxRetries: 2, settleSec: 5, confirmSec: 60 };
+const DEFAULT_CFG = { bufferMinSec: 10, bufferMaxSec: 50, mute: true, maxRetries: 2, settleSec: 5, confirmSec: 60 };
 const ITEM_LABEL = { pending: 'Chờ học', running: 'Đang học', done: 'Xong', manual: 'Làm tay', locked: 'Chưa mở', failed: 'Lỗi' };
 const STATUS_LABEL = { idle: 'Chưa quét', scanned: 'Sẵn sàng', running: 'Đang chạy', stopped: 'Đã dừng', done: 'Hoàn tất', error: 'Lỗi' };
 const LIST_DEFAULT = new Set(['running', 'pending', 'failed', 'manual', 'locked']);
@@ -58,10 +58,13 @@ function render({ state, running, cfg }) {
   // Tổng kết
   const c = {};
   let estSec = 0;
+  const bufLo = cfg?.bufferMinSec ?? DEFAULT_CFG.bufferMinSec;
+  const bufHi = Math.max(bufLo, cfg?.bufferMaxSec ?? DEFAULT_CFG.bufferMaxSec);
+  const bufAvg = (bufLo + bufHi) / 2;
   for (const i of state.items) {
     c[i.status] = (c[i.status] || 0) + 1;
     if (i.status === 'pending' || i.status === 'running') {
-      estSec += Math.max(0, (i.requiredMin - i.learnedMin) * 60) + (cfg?.bufferSec ?? 60);
+      estSec += Math.max(0, (i.requiredMin - i.learnedMin) * 60) + bufAvg;
     }
   }
   if (!state.items.length) {
@@ -117,17 +120,24 @@ async function refresh() {
 async function loadCfg() {
   const got = await chrome.storage.local.get(CFG_KEY);
   const cfg = { ...DEFAULT_CFG, ...(got[CFG_KEY] || {}) };
-  $('#cfgBuffer').value = cfg.bufferSec;
+  $('#cfgBufMin').value = cfg.bufferMinSec;
+  $('#cfgBufMax').value = cfg.bufferMaxSec;
   $('#cfgRetries').value = cfg.maxRetries;
   $('#cfgMute').checked = cfg.mute;
 }
 
 async function saveCfg() {
   const got = await chrome.storage.local.get(CFG_KEY);
+  const clampSec = (v) => Math.min(900, Math.max(0, Math.round(Number(v) || 0)));
+  let lo = clampSec($('#cfgBufMin').value), hi = clampSec($('#cfgBufMax').value);
+  if (hi < lo) [lo, hi] = [hi, lo];
+  $('#cfgBufMin').value = lo; $('#cfgBufMax').value = hi;
+  const { bufferSec: _old, ...prev } = got[CFG_KEY] || {};
   const cfg = {
     ...DEFAULT_CFG,
-    ...(got[CFG_KEY] || {}),
-    bufferSec: Math.min(900, Math.max(0, Number($('#cfgBuffer').value) || 0)),
+    ...prev,
+    bufferMinSec: lo,
+    bufferMaxSec: hi,
     maxRetries: Math.min(5, Math.max(0, Math.round(Number($('#cfgRetries').value) || 0))),
     mute: $('#cfgMute').checked,
   };
@@ -173,7 +183,7 @@ async function init() {
     if (!r?.ok) showMsg(r?.error);
     refresh();
   });
-  for (const id of ['#cfgBuffer', '#cfgRetries', '#cfgMute']) $(id).addEventListener('change', saveCfg);
+  for (const id of ['#cfgBufMin', '#cfgBufMax', '#cfgRetries', '#cfgMute']) $(id).addEventListener('change', saveCfg);
 
   refresh();
   setInterval(refresh, 1000);

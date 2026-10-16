@@ -37,8 +37,11 @@
     <details>
       <summary>Cài đặt</summary>
       <div class="settings">
-        <label>Thời gian đệm mỗi bài (giây)
-          <input type="number" id="cfgBuffer" min="0" max="900" step="10">
+        <label>Đệm ngẫu nhiên mỗi bài: từ (giây)
+          <input type="number" id="cfgBufMin" min="0" max="900" step="1">
+        </label>
+        <label>đến (giây)
+          <input type="number" id="cfgBufMax" min="0" max="900" step="1">
         </label>
         <label>Số lần thử lại nếu chưa hoàn thành
           <input type="number" id="cfgRetries" min="0" max="5" step="1">
